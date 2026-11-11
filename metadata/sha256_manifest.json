@@ -1,0 +1,36 @@
+{
+  "generated_utc": "2026-11-11T18:12:32.363138+00:00",
+  "manifest_version": "1.0.0",
+  "files": {
+    "data/raw/faa_registry/MASTER.txt": {
+      "sha256": "bd5ca954fed87ccf0f01d8bb86e1bc13fdd96deabac85f231a9fa4a44b07a0dc",
+      "bytes": 195860260,
+      "last_modified_utc": "2026-11-11T15:49:44.379542+00:00"
+    },
+    "data/raw/faa_registry/ACFTREF.txt": {
+      "sha256": "0a32fddb9fd142cbc9ee7db8ab38200b51722a9987c91a92b734fbc5d962c534",
+      "bytes": 14884828,
+      "last_modified_utc": "2026-11-11T15:49:44.879014+00:00"
+    },
+    "data/raw/bts_ontime/bts_ontime_2024_q1.csv": {
+      "sha256": "4c43d6fa611105b197e3287c3b9e74468ebeae28d0eefe9b251e50fd6e88c6e4",
+      "bytes": 11513300,
+      "last_modified_utc": "2026-11-11T17:45:27.075300+00:00"
+    },
+    "data/raw/nasa_asrs/asrs_incidents.csv": {
+      "sha256": "11c658d07b2ddaf316dd364f3e3aae5e26ae9542d4c75aa456314398b7134afd",
+      "bytes": 6410603,
+      "last_modified_utc": "2026-11-11T16:27:29.590898+00:00"
+    },
+    "data/curated/duckdb/aviation_safety.duckdb": {
+      "sha256": "9e241ec9786ea20bba80049d2848c4008820d5fe5a61d8f57fa09f4ba0cd7ba7",
+      "bytes": 22818816,
+      "last_modified_utc": "2026-11-11T18:12:31.426839+00:00"
+    },
+    "metadata/database_schema_manifest.json": {
+      "sha256": "bc89d332c1b4a54beade2bc0e09e2405a8b46932d92ce3d87e3216480fdc22cb",
+      "bytes": 12550,
+      "last_modified_utc": "2026-11-11T19:01:40.475162+00:00"
+    }
+  }
+}

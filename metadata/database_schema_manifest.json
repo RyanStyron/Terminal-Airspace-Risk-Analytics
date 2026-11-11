@@ -1,0 +1,309 @@
+{
+  "database_name": "aviation_safety.duckdb",
+  "database_path": "data/curated/duckdb/aviation_safety.duckdb",
+  "schema_version": "1.1.0",
+  "created_utc": "2024-04-05T00:00:00Z",
+  "database_description": "Curated analytical store integrating FAA Aircraft Registry, DOT BTS TranStats On-Time Performance (Q1 2024), and NASA ASRS incident reports for terminal airspace risk analysis across the New York Metro terminal airspace (JFK, LGA, EWR).",
+  "tables": {
+    "dim_faa_acftref": {
+      "table_type": "dimension",
+      "source_file": "data/raw/faa_registry/ACFTREF.txt",
+      "row_count_approx": 75526,
+      "primary_key": ["mfr_mdl_code"],
+      "description": "FAA Aircraft Reference dimension mapping manufacturer/model codes to aircraft specifications and weight bands.",
+      "columns": {
+        "mfr_mdl_code": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "FAA 7-character alphanumeric manufacturer and model identifier code."
+        },
+        "manufacturer": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "Normalized aircraft manufacturer name (e.g., BOEING, AIRBUS, BOMBARDIER)."
+        },
+        "model_name": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "Specific airframe model designation (e.g., A320-232, 737-8, CL-600-2D24)."
+        },
+        "type_acft_code": {
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "FAA aircraft type code (e.g., 4 = Fixed Wing Single-Engine, 5 = Fixed Wing Multi-Engine)."
+        },
+        "num_engines": {
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "Count of installed propulsion engines."
+        },
+        "weight_code": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "FAA gross weight classification band (CLASS 1: <=12,499 lbs; CLASS 2: 12,500-19,999 lbs; CLASS 3: >=20,000 lbs transport category; CLASS 4: UAS/drone)."
+        }
+      }
+    },
+    "dim_aircraft_registry": {
+      "table_type": "dimension",
+      "source_datasets": [
+        "data/raw/faa_registry/MASTER.txt",
+        "data/raw/faa_registry/ACFTREF.txt"
+      ],
+      "row_count_approx": 318990,
+      "primary_key": ["n_number"],
+      "foreign_keys": [
+        {
+          "columns": ["mfr_mdl_code"],
+          "references": "dim_faa_acftref(mfr_mdl_code)"
+        }
+      ],
+      "description": "FAA Master Civil Aircraft Registry dimension storing individual airframe registrations and standardized wake turbulence classifications.",
+      "columns": {
+        "n_number": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Civil aircraft tail registration number without leading 'N' prefix (e.g., 485PX, 912XJ)."
+        },
+        "mfr_mdl_code": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "Foreign key reference linking to dim_faa_acftref."
+        },
+        "manufacturer": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "Aircraft airframe manufacturer name."
+        },
+        "model_name": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "Airframe model name used for widebody prefix pattern matching."
+        },
+        "num_engines": {
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "Number of installed engines."
+        },
+        "wake_turbulence_class": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Standardized ATC wake vortex category derived from airframe specifications: Small (<=41,000 lbs MTOW), Large (41,001-300,000 lbs MTOW narrowbodies/regionals), Heavy (>300,000 lbs MTOW widebodies like B767/B777/B787/A330/A350), or Super (A380)."
+        }
+      }
+    },
+    "fct_terminal_arrivals": {
+      "table_type": "fact",
+      "source_datasets": [
+        "data/raw/bts_ontime/bts_ontime_2024_q1.csv",
+        "data/raw/faa_registry/MASTER.txt",
+        "data/raw/faa_registry/ACFTREF.txt"
+      ],
+      "row_count_approx": 95788,
+      "primary_key": ["flight_date", "carrier", "tail_num", "crs_dep_time"],
+      "foreign_keys": [
+        {
+          "columns": ["tail_num"],
+          "references": "dim_aircraft_registry(n_number)"
+        }
+      ],
+      "description": "DOT BTS domestic commercial scheduled flight arrivals terminating at New York metro hubs (JFK, LGA, EWR) during Q1 2024 (Jan-Mar). Filtered for non-cancelled, non-diverted operations.",
+      "columns": {
+        "flight_date": {
+          "type": "DATE",
+          "nullable": false,
+          "description": "Scheduled calendar flight date."
+        },
+        "carrier": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Reporting air carrier IATA/DOT code (e.g., DL, AA, UA, B6)."
+        },
+        "tail_num": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Aircraft registration tail number as reported by carrier (e.g., N485PX)."
+        },
+        "origin_airport": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Origin IATA airport code."
+        },
+        "dest_airport": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Destination terminal hub code: JFK (John F. Kennedy), LGA (LaGuardia), or EWR (Newark Liberty)."
+        },
+        "crs_dep_time": {
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "Computer Reservation System scheduled departure local time (hhmm)."
+        },
+        "actual_dep_time": {
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "Actual gate pushback departure local time (hhmm)."
+        },
+        "dep_delay_min": {
+          "type": "DOUBLE",
+          "nullable": true,
+          "description": "Gate departure delay in minutes (negative represents early pushback)."
+        },
+        "taxi_out_min": {
+          "type": "DOUBLE",
+          "nullable": true,
+          "description": "Taxi-out duration from gate departure to wheels-off in minutes."
+        },
+        "wheels_off": {
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "Local timestamp of airborne takeoff (hhmm)."
+        },
+        "wheels_on": {
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "Local timestamp of runway touchdown (hhmm)."
+        },
+        "taxi_in_min": {
+          "type": "DOUBLE",
+          "nullable": true,
+          "description": "Taxi-in duration from touchdown to arrival gate in minutes."
+        },
+        "crs_arr_time": {
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "Scheduled gate arrival local time (hhmm)."
+        },
+        "actual_arr_time": {
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "Actual gate arrival local time (hhmm)."
+        },
+        "arr_delay_min": {
+          "type": "DOUBLE",
+          "nullable": true,
+          "description": "Arrival gate delay relative to scheduled arrival in minutes."
+        },
+        "crs_elapsed_time_min": {
+          "type": "DOUBLE",
+          "nullable": false,
+          "description": "Scheduled gate-to-gate duration in minutes."
+        },
+        "actual_elapsed_time_min": {
+          "type": "DOUBLE",
+          "nullable": false,
+          "description": "Actual executed gate-to-gate duration in minutes."
+        },
+        "air_time_min": {
+          "type": "DOUBLE",
+          "nullable": true,
+          "description": "Airborne flight duration from wheels-off to wheels-on in minutes."
+        },
+        "buffer_delay_min": {
+          "type": "DOUBLE",
+          "nullable": false,
+          "description": "Primary continuous regression target (Delta t): ActualElapsedTime - CRSElapsedTime in minutes. Measures terminal sequencing delay, tactical airborne vectoring/holding, and arrival ground congestion beyond scheduled padding."
+        },
+        "delay_due_carrier": {
+          "type": "DOUBLE",
+          "nullable": false,
+          "description": "Delay attributed to carrier operations (maintenance, crew, boarding) in minutes."
+        },
+        "delay_due_weather": {
+          "type": "DOUBLE",
+          "nullable": false,
+          "description": "Delay attributed to extreme meteorological conditions in minutes."
+        },
+        "delay_due_nas": {
+          "type": "DOUBLE",
+          "nullable": false,
+          "description": "Delay attributed to National Airspace System terminal airspace congestion, ground stop programs, or volume delays in minutes."
+        },
+        "delay_due_security": {
+          "type": "DOUBLE",
+          "nullable": false,
+          "description": "Delay attributed to security breaches or terminal re-screening in minutes."
+        },
+        "delay_due_late_aircraft": {
+          "type": "DOUBLE",
+          "nullable": false,
+          "description": "Propagated rotational delay from upstream late-arriving aircraft in minutes."
+        },
+        "wake_turbulence_class": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Wake vortex class resolved via left join against dim_aircraft_registry (Large vs Heavy)."
+        }
+      }
+    },
+    "fct_asrs_incidents": {
+      "table_type": "fact",
+      "source_file": "data/raw/nasa_asrs/asrs_incidents.csv",
+      "row_count_approx": 2392,
+      "primary_key": ["acn_id"],
+      "description": "NASA Aviation Safety Reporting System confidential incident reports curated across terminal airspace operations.",
+      "columns": {
+        "acn_id": {
+          "type": "BIGINT",
+          "nullable": false,
+          "description": "NASA ASRS Accession Control Number (unique report identifier)."
+        },
+        "year_month": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Year and month of the safety incident event (YYYYMM)."
+        },
+        "time_of_day": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "Categorical time-of-day window (0001-0600, 0601-1200, 1201-1800, 1801-2400)."
+        },
+        "flight_conditions": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Reported meteorological condition: VMC (Visual), IMC (Instrument), Marginal, Mixed, or Unknown."
+        },
+        "light_condition": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "Ambient lighting condition (Daylight, Night, Dawn, Dusk)."
+        },
+        "acft1_model": {
+          "type": "VARCHAR",
+          "nullable": true,
+          "description": "Reported make and model designation of primary reporting aircraft (Aircraft 1)."
+        },
+        "flight_phase": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "Operational phase of flight during incident inception (e.g., Final Approach, Initial Approach, Descent, Landing, Taxi)."
+        },
+        "operating_far_part": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "FAA regulatory operational authority: Part 121 (Commercial Air Carrier), Part 91 (General Aviation), Part 135 (Commuter/On-Demand), or Part 107 (Commercial UAS)."
+        },
+        "is_multi_aircraft": {
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "Binary flag indicating whether a second airframe was actively involved in the proximity encounter (1 if Aircraft 2 is populated, 0 otherwise)."
+        },
+        "primary_problem": {
+          "type": "VARCHAR",
+          "nullable": false,
+          "description": "ASRS expert analyst assessment of root problem category (e.g., Human Factors, Procedure, Ambiguous, Airspace Structure, Weather)."
+        },
+        "is_severe_anomaly": {
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "Primary binary classification target for Hypothesis 1: 1 if anomaly descriptors contain Conflict NMAC, Wake Vortex Encounter, Loss Of Aircraft Control, or CFTT/CFIT; 0 otherwise."
+        },
+        "took_evasive_action": {
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "Secondary tactical response target: 1 if flight crew executed an evasive maneuver or abrupt break-off avoidance; 0 otherwise."
+        }
+      }
+    }
+  }
+}
