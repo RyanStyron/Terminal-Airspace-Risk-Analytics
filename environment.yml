@@ -1,0 +1,17 @@
+name: aero-risk-analytics
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - duckdb>=0.9.0
+  - pandas>=2.0.0
+  - pyarrow>=14.0.0
+  - numpy>=1.24.0
+  - scipy>=1.11.0
+  - scikit-learn>=1.3.0
+  - matplotlib>=3.8.0
+  - seaborn>=0.13.0
+  - pip:
+      - frictionless>=5.0.0
