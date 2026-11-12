@@ -1,0 +1,6 @@
+flight_conditions,total_reports,severe_count,severe_rate_pct,evasive_count,evasive_rate_pct
+VMC,1409,1059,75.16,836,59.33
+Unknown,843,584,69.28,295,34.99
+IMC,100,76,76.0,27,27.0
+Mixed,22,20,90.91,8,36.36
+Marginal,18,16,88.89,10,55.56

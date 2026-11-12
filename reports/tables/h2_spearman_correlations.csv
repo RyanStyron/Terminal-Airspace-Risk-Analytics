@@ -1,0 +1,6 @@
+,buffer_delay_min,dep_delay_min,taxi_in_min,air_time_min,delay_due_nas
+buffer_delay_min,1.0,0.017,0.233,0.076,0.425
+dep_delay_min,0.017,1.0,0.002,0.159,0.324
+taxi_in_min,0.233,0.002,1.0,-0.003,0.116
+air_time_min,0.076,0.159,-0.003,1.0,0.056
+delay_due_nas,0.425,0.324,0.116,0.056,1.0

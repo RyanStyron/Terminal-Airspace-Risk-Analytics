@@ -1,0 +1,4 @@
+dest_airport,flights,buffer_mean,buffer_median,buffer_iqr,buffer_p95,taxi_in_mean,nas_delay_mean
+EWR,29801,-10.31,-12.0,17.0,14.0,9.57,2.95
+JFK,28296,-6.64,-8.0,17.0,19.0,10.53,3.26
+LGA,37691,-6.44,-9.0,15.0,19.0,7.79,3.83

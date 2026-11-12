@@ -1,0 +1,9 @@
+flight_phase,operating_far_part,incidents,multi_acft_pct,severe_rate_pct,evasive_rate_pct
+Descent,Part 121,165,64.8,81.2,23.6
+Descent,Part 91,129,66.7,90.7,57.4
+Initial Approach,Part 121,268,45.5,88.1,34.7
+Initial Approach,Part 91,289,77.5,94.5,69.6
+Final Approach,Part 121,312,65.4,73.7,23.1
+Final Approach,Part 91,328,83.2,80.8,71.6
+Landing,Part 121,58,84.5,34.5,22.4
+Landing,Part 91,211,89.1,50.2,64.5

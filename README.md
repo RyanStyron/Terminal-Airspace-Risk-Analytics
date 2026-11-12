@@ -50,7 +50,9 @@ The repository manages raw public records across three primary sources with SHA-
 
 ### DOT BTS TranStats Integration & Relational Join (`fct_terminal_arrivals`)
 * **Key Normalization:** TranStats records aircraft registrations with a standard leading `'N'` (e.g., `N485PX`), whereas the FAA master registry stores raw alphanumeric strings (`485PX`). The pipeline applies regular expression normalization:
-  $$\text{CleanNNumber} = \text{REGEXP\_REPLACE}(\text{TRIM}(\text{Tail\_Num}), \text{'}\hat{\phantom{a}}[\text{Nn}]\text{'}, \text{''})$$
+
+  `CleanNNumber = REGEXP_REPLACE(TRIM(Tail_Num), '^[Nn]', '')`
+
   This achieved a **96.49% foreign key match rate** (92,428 out of 95,788 arrival flights linked to active FAA airframe specifications).
 * **Target Metric Formulation ($\Delta t$):** The primary continuous metric for terminal airspace sequencing buffer delay is computed at the row level:
   $$\Delta t = \text{ActualElapsedTime} - \text{CRSElapsedTime}$$
